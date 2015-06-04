@@ -4,15 +4,52 @@ output:
   html_document:
     keep_md: true
 ---
+```{r setoptions,echo=TRUE}
+knitr::opts_chunk$set(echo=TRUE)
+```
 
+```{r computetime,results='hide'}
+Sys.setlocale(category = "LC_ALL", locale = "en_US.utf8")
+last_compute_time<-format(Sys.time(),"%a %b %d %Y %X ")
+data_archive_filename<-"activity.zip"
+data_filename<-"activity.csv"
+```
+last computed at : `r last_compute_time` 
 
 ## Loading and preprocessing the data
-
+I will first extract data archive  `r data_archive_filename` in current directory
+```{r}
+unzip(data_archive_filename)
+```
+an load the data inside a dataframe variable called df
+```{r}
+df<-read.csv(data_filename)
+```
+here is a summary of the original data
+```{r summary}
+library(knitr)
+kable(summary(df))
+```
 
 
 ## What is mean total number of steps taken per day?
+```{r steps_per_day}
+library(dplyr)
 
-
+df_byday<-df %>%
+  dplyr::group_by(date) %>%
+  summarise( num_steps_value = n(),
+             total_steps_per_day = sum(steps)
+            )
+```
+here is an histogram of the total number of steps per day
+```{r histogram_steps_per_day}
+hist(df_byday$total_steps_per_day)
+```
+and here is the mean total number of steps taken per day
+```{r mean_steps_per_day}
+mean(df_byday$total_steps_per_day,na.rm = TRUE)
+```
 
 ## What is the average daily activity pattern?
 
