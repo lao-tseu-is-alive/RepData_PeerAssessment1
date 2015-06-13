@@ -16,6 +16,12 @@ data_filename<-"activity.csv"
 ```
 last computed at : `r last_compute_time` 
 
+The data for this assignment was downloaded in june 2015 from the course web site and is included in my github repository 
+The variables included in this dataset are:
+1. steps: Number of steps taking in a 5-minute interval (missing values are coded as NA)
+2. date: The date on which the measurement was taken in YYYY-MM-DD format
+3. interval: Identifier for the 5-minute interval in which measurement was taken
+
 ## Loading and preprocessing the data
 I will first extract data archive  `r data_archive_filename` in current directory
 ```{r}
@@ -31,32 +37,72 @@ library(knitr)
 kable(summary(df))
 ```
 
+now I will do some preprocessing for the analyse
 
-## What is mean total number of steps taken per day?
+first let's use dplyr library to calculate a dataframe with the total number of steps per day
 ```{r steps_per_day}
 library(dplyr)
 
 df_byday<-df %>%
   dplyr::group_by(date) %>%
-  summarise( num_steps_value = n(),
+  summarise( num_values = n(),
              total_steps_per_day = sum(steps)
             )
 ```
+
+now let's create another dafaframe with average steps per interval using the group_by and summarise functions (notice for this I need to convert the Interval as factor first)
+```{r steps_per_interval}
+#df$interval_factor <- as.factor(df$interval)
+df_steps_by_interval<-df %>%
+    dplyr::group_by(interval) %>%
+  summarise( num_values = n(),
+             mean_steps_per_interval = mean(steps, na.rm=TRUE)
+            )
+```
+
+## What is mean total number of steps taken per day?
+
 here is an histogram of the total number of steps per day
 ```{r histogram_steps_per_day}
-hist(df_byday$total_steps_per_day)
+hist(df_byday$total_steps_per_day,main = "Total number of steps by day",xlab = "day", col = "blue")
 ```
-and here is the mean total number of steps taken per day
+
+here is the mean total number of steps taken per day
 ```{r mean_steps_per_day}
 mean(df_byday$total_steps_per_day,na.rm = TRUE)
 ```
+and here is the median total number of steps taken per day
+```{r median_steps_per_day}
+median(df_byday$total_steps_per_day,na.rm = TRUE)
+```
+
 
 ## What is the average daily activity pattern?
+Now let's draw a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
+```{r time_series_plot_of_5min_interval}
+plot(df_steps_by_interval$interval,df_steps_by_interval$mean_steps_per_interval, type = "l", xlab = "5-min interval", 
+    ylab = "Average across all Days", main = "Average number of steps taken", 
+    col = "blue")
+```
 
-
+Now to answer the question "Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?" I find wich row as the maximum value and filter the dataset to extract only this one
+```{r max_number_of_steps_by_interval_across_all_days}
+df_steps_by_interval[which.max(df_steps_by_interval$mean_steps_per_interval),]
+```
 
 ## Imputing missing values
-
+To calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs) let's first see the dimension of the original dataset
+```{r dim_df}
+dim(df)
+```
+the dimension of the complete cases
+```{r dim_df_complete}
+dim(df[complete.cases(df),])
+```
+and let's make the difference to have the total number of missing values
+```{r dim_df_minus_complete}
+dim(df)-dim(df[complete.cases(df),])
+```
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
